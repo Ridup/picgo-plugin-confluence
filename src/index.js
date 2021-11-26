@@ -4,6 +4,7 @@
 // logger.setDirectory('/Users/zhang/Work/WorkSpaces/WebWorkSpace/picgo-plugin-confluence/logs')
 // let log = logger('plugin')
 
+const {EnumAttachmentType} = require('./constant')
 module.exports = (ctx) => {
   const register = () => {
     ctx.helper.uploader.register('confluence', {
@@ -12,6 +13,7 @@ module.exports = (ctx) => {
       config: config
     })
   }
+
   const handle = async function (ctx) {
     let userConfig = ctx.getConfig('picBed.confluence')
     if (!userConfig) {
@@ -77,44 +79,52 @@ module.exports = (ctx) => {
     }
     return [
       {
-        name: 'URL',
+        name: 'confluenceBaseUrl',
         type: 'input',
-        default: userConfig.URL,
+        default: userConfig.confluenceBaseUrl,
         required: true,
         message: 'https://confluence.com',
-        alias: 'URL'
+        alias: 'Confluence网站地址'
       },
       {
-        name: 'Group',
+        name: 'userName',
         type: 'input',
-        default: userConfig.Group,
+        default: userConfig.userName,
         required: true,
-        message: 'Group',
-        alias: 'Group'
+        message: 'User Name',
+        alias: '用户名'
       },
       {
-        name: 'Project',
-        type: 'input',
-        default: userConfig.Project,
+        name: 'userPassword',
+        type: 'password',
+        default: userConfig.userPassword,
         required: true,
-        message: 'Project',
-        alias: 'Project'
+        message: 'User Password',
+        alias: '密码'
       },
       {
-        name: 'Token',
-        type: 'input',
-        default: userConfig.Token,
+        name: 'attachmentType',
+        type: 'list',
+        choices: [{...EnumAttachmentType.FILE}, {...EnumAttachmentType.IMAGE}],
+        default: userConfig.attachmentType,
         required: true,
-        message: 'aLS32eaxs1GLvKcv9f-k',
-        alias: 'Token'
+        message: 'Attachment Type',
+        alias: '附件类型'
+      },
+      {
+        name: 'pageId',
+        type: 'input',
+        default: userConfig.pageId,
+        required: true,
+        message: 'Page Id',
+        alias: '页面编号'
       }
     ]
   }
   return {
     uploader: 'confluence',
-    // transformer: 'confluence',
-    // config: config,
+    transformer: 'confluence',
+    config: config,
     register
-
   }
 }
