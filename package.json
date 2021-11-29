@@ -1,6 +1,6 @@
 {
-  "name": "picgo-plugin-confluence",
-  "version": "0.0.1",
+  "name": "picgo-plugin-confluence-test",
+  "version": "0.0.0",
   "description": "picgo uploader for confluence",
   "main": "src/index.js",
   "publishConfig": {
@@ -11,7 +11,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "patch": "npm version patch && npm publish && git push origin main && git push origin --tags",
     "minor": "npm version minor && npm publish && git push origin main && git push origin --tags",
-    "major": "npm version major && npm publish && git push origin main && git push origin --tags"
+    "major": "npm version major && npm publish && git push origin main && git push origin --tags",
+    "publish": "npm publish && git push origin main && git push origin --tags"
   },
   "keywords": [
     "picgo",
