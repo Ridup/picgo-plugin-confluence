@@ -1,5 +1,5 @@
 {
-  "name": "picgo-plugin-confluence-test",
+  "name": "picgo-plugin-confluence",
   "version": "0.0.1",
   "description": "picgo uploader for confluence",
   "main": "src/index.js",
@@ -12,7 +12,8 @@
     "patch": "npm version patch && npm publish && git push origin main && git push origin --tags",
     "minor": "npm version minor && npm publish && git push origin main && git push origin --tags",
     "major": "npm version major && npm publish && git push origin main && git push origin --tags",
-    "publish": "npm publish && git push origin main && git push origin --tags"
+    "publish": "npm publish && git push origin main && git push origin --tags",
+    "build": "npm run build"
   },
   "keywords": [
     "picgo",
@@ -23,6 +24,7 @@
   "mailto": "mu_ran@yahoo.com",
   "license": "MIT",
   "devDependencies": {
+    "picgo": "^1.4.0",
     "eslint": "^5.0.1",
     "eslint-config-standard": "^11.0.0",
     "eslint-plugin-import": "^2.13.0",
