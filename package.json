@@ -1,6 +1,6 @@
 {
   "name": "picgo-plugin-confluence",
-  "version": "1.1.2",
+  "version": "0.0.0",
   "description": "picgo uploader for confluence",
   "main": "src/index.js",
   "publishConfig": {
@@ -19,6 +19,7 @@
     "picgo-plugin"
   ],
   "author": "ridup",
+  "mailto": "mu_ran@yahoo.com",
   "license": "MIT",
   "devDependencies": {
     "eslint": "^5.0.1",
