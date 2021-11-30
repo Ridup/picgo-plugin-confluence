@@ -1,10 +1,10 @@
-// fork from : https://github.com/yuki-xin/picgo-plugin-web-uploader
+/**
+ * Confluence图床
+ *
+ * @author ridup
+ * @since 2021/11/29 14:07
+ */
 
-// const logger = require('@varnxy/logger')
-// logger.setDirectory('/Users/zhang/Work/WorkSpaces/WebWorkSpace/picgo-plugin-confluence/logs')
-// let log = logger('plugin')
-
-const {EnumAttachmentType} = require('./constant')
 module.exports = (ctx) => {
   const register = () => {
     ctx.helper.uploader.register('confluence', {
@@ -15,61 +15,90 @@ module.exports = (ctx) => {
   }
 
   const handle = async function (ctx) {
-    let userConfig = ctx.getConfig('picBed.confluence')
+    const {log} = ctx
+    const userConfig = ctx.getConfig('picBed.confluence')
     if (!userConfig) {
       throw new Error('Can\'t find uploader config')
     }
-    const url = userConfig.URL
-    const group = userConfig.Group
-    const project = userConfig.Project
-    const token = userConfig.Token
-    const realImgUrlPre = url + '/' + group + '/' + project
-    const realUrl = url + '/api/v4/projects/' + group + '%2F' + project + '/uploads'
+    const confluenceBaseUrl = userConfig.confluenceBaseUrl
+    const pageId = userConfig.pageId
+    const realUrl = confluenceBaseUrl + '/rest/api/content/' + pageId + '/child/attachment'
 
     try {
-      let imgList = ctx.output
-      for (let i in imgList) {
+      const imgList = ctx.output || []
+      for (const i in imgList) {
         let image = imgList[i].buffer
         if (!image && imgList[i].base64Image) {
           image = Buffer.from(imgList[i].base64Image, 'base64')
         }
 
-        const postConfig = postOptions(realUrl, token, image, imgList[i].fileName)
-        let body = await ctx.Request.request(postConfig)
-        delete imgList[i].base64Image
-        delete imgList[i].buffer
-        body = JSON.parse(body)
-        imgList[i]['imgUrl'] = realImgUrlPre + body['url']
+        const request = buildRequest(realUrl, image, imgList[i].fileName, userConfig)
+
+        const res = await fetchRequest(ctx, request, log)
+        if (!res.statusCode) {
+          const body = res || {}
+          const {results} = body || {}
+          const {_links} = (results && results[0]) || {}
+          const {download} = _links || {}
+          log.warn('download:', JSON.stringify(download))
+          imgList[i]['imgUrl'] = `${confluenceBaseUrl}${download || ''}`
+          delete imgList[i].base64Image
+          delete imgList[i].buffer
+        } else {
+          log.error('上传失败:', res.error && res.error.message)
+          ctx.emit('notification', {
+            title: '上传失败',
+            body: res.error && res.error.message
+          })
+        }
       }
     } catch (err) {
       ctx.emit('notification', {
         title: '上传失败',
-        body: JSON.stringify(err)
+        body: err
       })
     }
   }
 
-  const postOptions = (url, token, image, fileName) => {
-    let headers = {
+  const fetchRequest = (ctx, request, log) => {
+    return new Promise((resolve, reject) => {
+      ctx.request(request)
+        .then(function (body) {
+          resolve(body)
+        })
+        .catch(function (err) {
+          resolve(err)
+        })
+    })
+  }
+
+  /**
+   * 请求构建，更多请参考<a src='https://github.com/request/request-promise-native'>Request-Promise-Native</a>
+   *
+   * @param url
+   * @param image
+   * @param fileName
+   * @param userConfig
+   */
+  const buildRequest = (url, image, fileName, userConfig = {}) => {
+    const userName = userConfig.userName
+    const userPassword = userConfig.userPassword
+    const headers = {
       contentType: 'multipart/form-data',
-      'User-Agent': 'PicGo',
-      'PRIVATE-TOKEN': token
+      'X-Atlassian-Token': 'nocheck',
+      'Authorization': `Basic ${Buffer.from(`${userName}:${userPassword}`).toString('base64')}`
     }
-    let formData = {
-      'file': {
-        'value': image,
-        'options': {
-          'filename': fileName
-        }
-      }
+    const formData = {
+      file: image,
+      comment: `From PicGo -${new Date().toLocaleDateString()}`
     }
-    const opts = {
+    return {
       method: 'POST',
-      url: url,
+      json: true,
+      uri: url,
       headers: headers,
       formData: formData
     }
-    return opts
   }
 
   const config = ctx => {
@@ -101,15 +130,6 @@ module.exports = (ctx) => {
         required: true,
         message: 'User Password',
         alias: '密码'
-      },
-      {
-        name: 'attachmentType',
-        type: 'list',
-        choices: [{...EnumAttachmentType.FILE}, {...EnumAttachmentType.IMAGE}],
-        default: userConfig.attachmentType,
-        required: true,
-        message: 'Attachment Type',
-        alias: '附件类型'
       },
       {
         name: 'pageId',
