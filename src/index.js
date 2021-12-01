@@ -89,7 +89,12 @@ module.exports = (ctx) => {
       'Authorization': `Basic ${Buffer.from(`${userName}:${userPassword}`).toString('base64')}`
     }
     const formData = {
-      file: image,
+      file: {
+        value: image,
+        options: {
+          filename: fileName
+        }
+      },
       comment: `From PicGo -${new Date().toLocaleDateString()}`
     }
     return {
