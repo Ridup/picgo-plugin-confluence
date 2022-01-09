@@ -1,6 +1,6 @@
 {
   "name": "picgo-plugin-confluence",
-  "version": "0.0.3",
+  "version": "1.2.1",
   "description": "picgo uploader for confluence",
   "main": "src/index.js",
   "publishConfig": {

@@ -7,6 +7,8 @@ const EnumAttachmentType = {
   IMAGE: {value: 'image ', name: '图片'}
 }
 
+const logPrintEnabled = false
+
 module.exports = {
-  EnumAttachmentType
+  EnumAttachmentType, logPrintEnabled
 }

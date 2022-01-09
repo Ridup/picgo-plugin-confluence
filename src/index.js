@@ -5,6 +5,8 @@
  * @since 2021/11/29 14:07
  */
 
+const {logPrintEnabled} = require('./constant')
+
 module.exports = (ctx) => {
   const register = () => {
     ctx.helper.uploader.register('confluence', {
@@ -13,9 +15,26 @@ module.exports = (ctx) => {
       config: config
     })
   }
+  const logInfo = message => {
+    const {log} = ctx
+    if (logPrintEnabled) {
+      log.warn(message)
+    }
+  }
+  const logWarn = message => {
+    const {log} = ctx
+    if (logPrintEnabled) {
+      log.warn(message)
+    }
+  }
+  const logError = message => {
+    const {log} = ctx
+    if (logPrintEnabled) {
+      log.warn(message)
+    }
+  }
 
   const handle = async function (ctx) {
-    const {log} = ctx
     const userConfig = ctx.getConfig('picBed.confluence')
     if (!userConfig) {
       throw new Error('Can\'t find uploader config')
@@ -34,18 +53,18 @@ module.exports = (ctx) => {
 
         const request = buildRequest(realUrl, image, imgList[i].fileName, userConfig)
 
-        const res = await fetchRequest(ctx, request, log)
+        const res = await fetchRequest(ctx, request)
         if (!res.statusCode) {
           const body = res || {}
           const {results} = body || {}
           const {_links} = (results && results[0]) || {}
           const {download} = _links || {}
-          log.warn('download:', JSON.stringify(download))
+          logWarn(`download: ${JSON.stringify(download)}`)
           imgList[i]['imgUrl'] = `${confluenceBaseUrl}${download || ''}`
           delete imgList[i].base64Image
           delete imgList[i].buffer
         } else {
-          log.error('上传失败:', res.error && res.error.message)
+          logError(`上传失败: ${res.error && res.error.message}`)
           ctx.emit('notification', {
             title: '上传失败',
             body: res.error && res.error.message
@@ -60,10 +79,19 @@ module.exports = (ctx) => {
     }
   }
 
-  const fetchRequest = (ctx, request, log) => {
+  const fetchRequest = (ctx, request) => {
     return new Promise((resolve, reject) => {
       ctx.request(request)
-        .then(function (body) {
+        .then(function (response) {
+          const {body, headers} = response
+          const cookie = headers['set-cookie']
+          logInfo(`fetchRequest-cookie: ${cookie}`)
+          if (cookie) {
+            ctx.setConfig({
+              'picBed.confluence.cookie': cookie
+            })
+          }
+          logInfo(`fetchRequest-response: ${response && JSON.stringify(response)}`)
           resolve(body)
         })
         .catch(function (err) {
@@ -83,10 +111,13 @@ module.exports = (ctx) => {
   const buildRequest = (url, image, fileName, userConfig = {}) => {
     const userName = userConfig.userName
     const userPassword = userConfig.userPassword
+    const cookie = userConfig.cookie
+    console.info(`buildRequest.cookie = ${cookie}`)
     const headers = {
       contentType: 'multipart/form-data',
       'X-Atlassian-Token': 'nocheck',
-      'Authorization': `Basic ${Buffer.from(`${userName}:${userPassword}`).toString('base64')}`
+      'Authorization': `Basic ${Buffer.from(`${userName}:${userPassword}`).toString('base64')}`,
+      cookie
     }
     const formData = {
       file: {
@@ -99,6 +130,7 @@ module.exports = (ctx) => {
     }
     return {
       method: 'POST',
+      resolveWithFullResponse: true,
       json: true,
       uri: url,
       headers: headers,
