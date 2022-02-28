@@ -15,6 +15,10 @@ npm i picgo-plugin-confluence
 - 密码
 - 页面编号
 
+### 支持功能
+- [x] 上传文件至指定的Confluence空间中
+- [x] 使用cookies，减少每次上传请求用户验证的时间
+- [ ] 持久化cookies，避免第一次打开软件上传的用户验证时间
 
 ### Demo
 #### Config View
